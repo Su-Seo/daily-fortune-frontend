@@ -1,7 +1,7 @@
-import type { FortuneBook } from "@/models/fortune";
+import type { FortunePageList } from "@/models/fortune";
 
 /** 책님 운세 책 데이터 - 각 페이지에 짧은 운세 문구 */
-export const fortuneBook: FortuneBook = [
+export const fortuneBookData: FortunePageList = [
   { id: 1, text: "오늘은 작은 선물이 당신을 찾아옵니다. 감사한 마음으로 받아들이세요." },
   { id: 2, text: "말 한마디가 인연을 바꿉니다. 부드럽게 말해 보세요." },
   { id: 3, text: "오후에 좋은 소식이 있을 것입니다. 전화와 메시지를 확인하세요." },

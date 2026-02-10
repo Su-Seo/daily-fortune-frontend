@@ -1,5 +1,6 @@
 import { BookContent, BookCover } from "@/components/FortuneBook";
 
+import { defaultBook } from "@/config/books";
 import { cn } from "@/lib/utils";
 import { useFortuneBookStore } from "@/stores/fortuneBookStore";
 
@@ -14,8 +15,14 @@ export function FortuneBookPage() {
       )}
     >
       <header className="mb-10 text-center">
-        <h1 className="font-serif text-3xl font-bold tracking-wide text-amber-900">책님</h1>
-        <p className="mt-1 text-sm text-amber-800/80">오늘의 운세를 펼쳐 보세요</p>
+        <h1 className="font-serif text-3xl font-bold tracking-wide text-amber-900">
+          {defaultBook.name}
+        </h1>
+        <p className="mt-1 text-sm text-amber-800/80">
+          {defaultBook.subtitle
+            ? `${defaultBook.subtitle}를 펼쳐 보세요`
+            : "오늘의 운세를 펼쳐 보세요"}
+        </p>
       </header>
 
       {isOpen ? <BookContent /> : <BookCover onOpen={useFortuneBookStore.getState().openBook} />}

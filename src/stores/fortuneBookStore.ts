@@ -55,8 +55,9 @@ export const useFortuneBookStore = create<FortuneBookState & FortuneBookActions>
 
     set({ isFlipping: true, resultPage });
 
-    const baseDelay = 100;
-    const maxDelay = 450;
+    // 플립 애니메이션(약 300ms)이 끝난 뒤 다음 페이지로 넘기기 위해 간격을 350ms 이상으로 설정
+    const baseDelay = 380;
+    const maxDelay = 620;
     const delayStep = (maxDelay - baseDelay) / Math.max(totalFlips - 1, 1);
 
     let flipCount = 0;
