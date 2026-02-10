@@ -1,0 +1,8 @@
+# 변경사항이 문서/이미지/CI 설정뿐이면 스킵
+CHANGED=$(git diff --name-only @{push} 2>/dev/null || git diff --name-only origin/HEAD)
+echo "$CHANGED" | grep -E '\.(md|mdx|png|jpe?g|svg)$|^docs/|^\.github/' >/dev/null && {
+  echo "Docs/assets-only → skip build"
+  exit 0
+}
+
+pnpm build:fast

@@ -1,0 +1,23 @@
+# Build outputs
+dist/
+build/
+
+# Dependencies
+node_modules/
+
+# Environment variable files
+*.env
+*.env.*
+
+# Images / media
+*.png
+*.jpg
+*.jpeg
+*.gif
+*.svg
+*.ico
+*.mp4
+*.mp3
+
+# Other unnecessary files
+*.lock
