@@ -1,4 +1,4 @@
-import {QueryClient} from "@tanstack/react-query";
+import { QueryClient } from "@tanstack/react-query";
 
 /**
  * React Query 전역 클라이언트

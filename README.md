@@ -61,18 +61,31 @@ src/
 
 ### 필수 요구사항
 
-- Node.js: 22.x
-- pnpm: 10.14.x
-  - package.json의 packageManager에 따름
+- Node.js: 22.18.x (Volta로 고정)
+- pnpm: 10.14.x (Volta로 고정)
 
-### 설치
+### Volta로 Node / pnpm 사용 (권장)
+
+[Volta](https://volta.sh/)를 쓰면 이 프로젝트 디렉터리에서 자동으로 위 버전이 사용됩니다.
+
+1. **Volta 설치**: https://volta.sh/ (Windows: `winget install Volta.Volta` 또는 인스톨러)
+2. **프로젝트 폴더에서 한 번만 실행**:
 
 ```bash
-# pnpm 설정 및 의존성 설치
-corepack enable && corepack prepare pnpm --activate
-pnpm i
+volta install node@22.18.0
+volta install pnpm@10.14.0
+```
+
+이후 이 폴더에서는 `node`, `pnpm`이 위 버전으로 고정됩니다.
+
+### 설치 및 실행
+
+```bash
+pnpm install
 pnpm dev
 ```
+
+(pnpm이 없으면 위 "Volta로 Node / pnpm 사용" 절대로 먼저 실행)
 
 ### 환경 변수
 

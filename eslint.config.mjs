@@ -9,7 +9,6 @@ import { globalIgnores } from "eslint/config";
 import globals from "globals";
 import tseslint from "typescript-eslint";
 
-
 export default tseslint.config([
   globalIgnores([
     "dist",
@@ -48,7 +47,7 @@ export default tseslint.config([
     plugins: {
       unicorn,
       "no-relative-import-paths": noRelativeImportPaths,
-      "import": pluginImport,
+      import: pluginImport,
     },
     rules: {
       // === VARIABLE DECLARATION ===
@@ -60,7 +59,7 @@ export default tseslint.config([
       "no-self-assign": "error",
       "@typescript-eslint/no-use-before-define": [
         "error",
-        {functions: false, classes: true, variables: true},
+        { functions: false, classes: true, variables: true },
       ],
       "init-declarations": ["warn", "always"],
       // === GLOBAL VARIABLES ===
@@ -153,12 +152,12 @@ export default tseslint.config([
       // === IMPORT PATHS ===
       "no-relative-import-paths/no-relative-import-paths": [
         "warn",
-        {allowSameFolder: true, rootDir: "src", prefix: "@"},
+        { allowSameFolder: true, rootDir: "src", prefix: "@" },
       ],
       // === IMPORT ORDER ===
       "import/order": "off",
       "import/first": "error",
-      "import/newline-after-import": ["error", { count: 1 }]
+      "import/newline-after-import": ["error", { count: 1 }],
     },
   },
   // file naming conventions
@@ -190,7 +189,13 @@ export default tseslint.config([
   {
     name: "file naming convention - hooks, stores, utils, lib, config, types, models",
     files: [
-      "src/hooks/**/*.ts", "src/stores/**/*.ts", "src/utils/**/*.ts", "src/lib/**/*.ts", "src/config/**/*.ts", "src/types/**/*.ts", "src/models/**/*.ts"
+      "src/hooks/**/*.ts",
+      "src/stores/**/*.ts",
+      "src/utils/**/*.ts",
+      "src/lib/**/*.ts",
+      "src/config/**/*.ts",
+      "src/types/**/*.ts",
+      "src/models/**/*.ts",
     ],
     ignores: ["**/*.d.ts", "**/*.config.ts", "**/index.ts"],
     rules: {
