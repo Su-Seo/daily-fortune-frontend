@@ -4,7 +4,6 @@
 import { useContext } from "react";
 
 import type { BookConfig } from "@/components/Book/book.config";
-import type { BookTheme3D } from "@/components/Book/book.theme";
 import { BookConfigContext } from "@/components/Book/bookContext";
 
 export function useBookConfig(): BookConfig {
@@ -13,9 +12,4 @@ export function useBookConfig(): BookConfig {
     throw new Error("useBookConfig must be used within BookConfigProvider");
   }
   return config;
-}
-
-/** 테마만 필요할 때 */
-export function useBookTheme(): BookTheme3D {
-  return useBookConfig().theme;
 }

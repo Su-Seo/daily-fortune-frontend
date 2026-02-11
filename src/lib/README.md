@@ -8,8 +8,6 @@
 
 ## 보일러 플레이트 초기 파일 구성
 
-- `axios.interceptors.ts` : Axios Interceptor, 초기 전체 코드 주석 처리 (미사용 시 파일 삭제 추천)
-
 - `queryClient.ts` : TanstackQuery 인스턴스, 옵션 설정 필요할 경우 주석 해제 후 사용 (`providers/provider.tsx`에서 사용 중)
 
 - `router.tsx` : React Router 설정, Data 라우팅 명시 용도 (`App.tsx`에서 사용 중)

@@ -10,15 +10,3 @@ export const defaultBook: Book = {
   themeId: defaultBookTheme.id,
   pages: fortuneBookData,
 };
-
-const bookMap: Record<string, Book> = {
-  [defaultBook.id]: defaultBook,
-};
-
-export function getBook(bookId: string): Book {
-  return bookMap[bookId] ?? defaultBook;
-}
-
-export function getAllBooks(): Book[] {
-  return Object.values(bookMap);
-}
