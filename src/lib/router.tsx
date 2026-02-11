@@ -3,13 +3,13 @@
 // - 라우트가 늘어나거나 그룹화 필요 시 `src/routes/` 폴더로 분리 권장
 import { createBrowserRouter } from "react-router";
 
-import { FortuneBookPage } from "@/pages/FortuneBookPage";
+import { BookPage } from "@/pages/BookPage";
 import { NotFoundPage } from "@/pages/NotFoundPage";
 
 export const router = createBrowserRouter([
   {
     path: "/",
-    element: <FortuneBookPage />,
+    element: <BookPage />,
   },
   {
     path: "*",
