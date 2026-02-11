@@ -6,12 +6,18 @@ import type { SpreadData } from "@/components/Book/book.types";
 
 interface Props {
   spread: SpreadData;
+  spreadIndex: number;
+  flipped: number;
   rotateY: number;
   zIndex: number;
 }
 
-export function SpreadPage({ spread, rotateY, zIndex }: Props) {
+export function SpreadPage({ spread, spreadIndex, flipped, rotateY, zIndex }: Props) {
   const shadow = Math.sin((-rotateY / 180) * Math.PI);
+  // 책 닫혀 있을 때(flipped=0) 표지만 radius 없음 (흰 코너 아티팩트 방지), 펼쳤을 때는 radius 적용
+  const noRadius = flipped === 0 && spreadIndex === 0;
+  const rightRadius = noRadius ? 0 : "0 4px 4px 0";
+  const leftRadius = noRadius ? 0 : "4px 0 0 4px";
 
   return (
     <div
@@ -36,8 +42,8 @@ export function SpreadPage({ spread, rotateY, zIndex }: Props) {
           backfaceVisibility: "hidden",
           WebkitBackfaceVisibility: "hidden" as const,
           overflow: "hidden",
-          borderRadius: "0 4px 4px 0",
-          boxShadow: "inset -1px 0 8px rgba(0,0,0,0.06)",
+          borderRadius: rightRadius,
+          background: spread.front.bg,
         }}
       >
         <PageFace data={spread.front} side="right" />
@@ -60,8 +66,8 @@ export function SpreadPage({ spread, rotateY, zIndex }: Props) {
           WebkitBackfaceVisibility: "hidden" as const,
           transform: "rotateY(180deg)",
           overflow: "hidden",
-          borderRadius: "4px 0 0 4px",
-          boxShadow: "inset 1px 0 8px rgba(0,0,0,0.06)",
+          borderRadius: leftRadius,
+          background: spread.back?.bg ?? "transparent",
         }}
       >
         <PageFace data={spread.back ?? null} side="left" />

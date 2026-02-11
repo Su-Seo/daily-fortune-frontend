@@ -82,7 +82,7 @@ function Cover({ d, zoomScale = 1 }: { d: CoverData; zoomScale?: number }) {
           textTransform: "uppercase",
         }}
       >
-        ✦ Anthology ✦
+        ✦ Fortune ✦
       </div>
       <div
         style={{

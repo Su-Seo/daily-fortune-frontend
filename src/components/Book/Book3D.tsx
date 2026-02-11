@@ -58,6 +58,7 @@ function RightPanel({
     return null;
   }
   const data = config.spreads[flipped].front;
+  const showStack = flipped > 0;
 
   return (
     <div
@@ -73,20 +74,21 @@ function RightPanel({
         zIndex: 0,
       }}
     >
-      {[3, 2, 1].map(n => (
-        <div
-          key={n}
-          style={{
-            position: "absolute",
-            top: n,
-            right: -n * 1.5,
-            bottom: n,
-            left: 2,
-            background: `rgba(${theme.stackBgRgb},${0.55 - n * 0.12})`,
-            borderRadius: "0 4px 4px 0",
-          }}
-        />
-      ))}
+      {showStack &&
+        [3, 2, 1].map(n => (
+          <div
+            key={n}
+            style={{
+              position: "absolute",
+              top: n,
+              right: -n * 1.5,
+              bottom: n,
+              left: 2,
+              background: `rgba(${theme.stackBgRgb},${0.55 - n * 0.12})`,
+              borderRadius: "0 4px 4px 0",
+            }}
+          />
+        ))}
       <PageFace data={data} side="right" />
     </div>
   );
@@ -225,6 +227,8 @@ function Book3DInner({ config, bookFlip }: { config: BookConfig; bookFlip: BookF
                     <SpreadPage
                       key={spread.id}
                       spread={spread}
+                      spreadIndex={i}
+                      flipped={flipped}
                       rotateY={isFlipping && flip ? flip.rotateY : 0}
                       zIndex={isFlipping ? 500 : 200 + (total - i)}
                     />
