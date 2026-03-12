@@ -9,6 +9,10 @@ import { SpreadPage } from "@/components/Book/SpreadPage";
 import type { BookConfig } from "@/components/Book/book.config";
 import type { BookFlipResult } from "@/components/Book/useBookFlip";
 
+const HIGHLIGHT_ZOOM = 1.5;
+const PAGE_W = 280;
+const PAGE_H = 390;
+
 function LeftPanel({ flipped, config }: { flipped: number; config: BookConfig }) {
   const total = config.spreads.length;
   const baseStyle = {
@@ -128,6 +132,20 @@ function Book3DInner({ config, bookFlip }: { config: BookConfig; bookFlip: BookF
 
   const { theme } = config;
 
+  const [bookScale, setBookScale] = useState(() => {
+    const available = window.innerWidth - 40;
+    return available < PAGE_W * 2 ? available / (PAGE_W * 2) : 1;
+  });
+
+  useEffect(() => {
+    const update = () => {
+      const available = window.innerWidth - 40;
+      setBookScale(available < PAGE_W * 2 ? available / (PAGE_W * 2) : 1);
+    };
+    window.addEventListener("resize", update);
+    return () => window.removeEventListener("resize", update);
+  }, []);
+
   return (
     <div
       style={{
@@ -168,74 +186,92 @@ function Book3DInner({ config, bookFlip }: { config: BookConfig; bookFlip: BookF
             alignItems: "center",
           }}
         >
-          <div style={{ perspective: "2400px", perspectiveOrigin: "50% 45%" }}>
-            <div style={{ position: "relative" }}>
-              {isShuffling && (
-                <div
-                  role="button"
-                  tabIndex={0}
-                  onClick={stopShuffle}
-                  onKeyDown={e => e.key === "Enter" && stopShuffle()}
-                  style={{
-                    position: "absolute",
-                    inset: -40,
-                    zIndex: 1000,
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    background: "rgba(0,0,0,0.3)",
-                    borderRadius: 12,
-                    cursor: "pointer",
-                    color: theme.hintColor,
-                    fontSize: 12,
-                    letterSpacing: 2,
-                  }}
-                >
-                  탭해서 멈추기
-                </div>
-              )}
-              <div
-                ref={bookRef}
-                style={{
-                  width: 560,
-                  height: 390,
-                  position: "relative",
-                  transformStyle: "preserve-3d",
-                  transform: "rotateX(6deg) rotateY(0deg)",
-                }}
-                onMouseDown={onMouseDown}
-                onTouchStart={onTouchStart}
-                onTouchMove={onTouchMove}
-                onTouchEnd={onTouchEnd}
-              >
-                <LeftPanel flipped={flipped} config={config} />
-                <RightPanel
-                  flipped={flipped}
-                  config={config}
-                  isFlippingLast={flip !== null && flip.idx === total - 1}
-                />
-
-                {config.spreads.map((spread, i) => {
-                  const isTurned = i < flipped;
-                  const isFlipping = flip?.idx === i;
-
-                  if (isTurned && !isFlipping) {
-                    return null;
-                  }
-
-                  return (
-                    <SpreadPage
-                      key={spread.id}
-                      spread={spread}
-                      spreadIndex={i}
+          <div
+            style={{
+              position: "relative",
+              width: PAGE_W * 2 * bookScale,
+              height: PAGE_H * bookScale,
+            }}
+          >
+            <div
+              style={{
+                position: "absolute",
+                top: 0,
+                left: 0,
+                transformOrigin: "top left",
+                transform: `scale(${bookScale})`,
+              }}
+            >
+              <div style={{ perspective: "2400px", perspectiveOrigin: "50% 45%" }}>
+                <div style={{ position: "relative" }}>
+                  {isShuffling && (
+                    <div
+                      role="button"
+                      tabIndex={0}
+                      onClick={stopShuffle}
+                      onKeyDown={e => e.key === "Enter" && stopShuffle()}
+                      style={{
+                        position: "absolute",
+                        inset: -40,
+                        zIndex: 1000,
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        background: "rgba(0,0,0,0.3)",
+                        borderRadius: 12,
+                        cursor: "pointer",
+                        color: theme.hintColor,
+                        fontSize: 12,
+                        letterSpacing: 2,
+                      }}
+                    >
+                      탭해서 멈추기
+                    </div>
+                  )}
+                  <div
+                    ref={bookRef}
+                    style={{
+                      width: 560,
+                      height: 390,
+                      position: "relative",
+                      transformStyle: "preserve-3d",
+                      transform: "rotateX(6deg) rotateY(0deg)",
+                    }}
+                    onMouseDown={onMouseDown}
+                    onTouchStart={onTouchStart}
+                    onTouchMove={onTouchMove}
+                    onTouchEnd={onTouchEnd}
+                  >
+                    <LeftPanel flipped={flipped} config={config} />
+                    <RightPanel
                       flipped={flipped}
-                      rotateY={isFlipping && flip ? flip.rotateY : 0}
-                      zIndex={isFlipping ? 500 : 200 + (total - i)}
+                      config={config}
+                      isFlippingLast={flip !== null && flip.idx === total - 1}
                     />
-                  );
-                })}
 
-                <SpineShadow />
+                    {config.spreads.map((spread, i) => {
+                      const isTurned = i < flipped;
+                      const isFlipping = flip?.idx === i;
+
+                      if (isTurned && !isFlipping) {
+                        return null;
+                      }
+
+                      return (
+                        <SpreadPage
+                          key={spread.id}
+                          spread={spread}
+                          spreadIndex={i}
+                          flipped={flipped}
+                          rotateY={isFlipping && flip ? flip.rotateY : 0}
+                          zIndex={isFlipping ? 500 : 200 + (total - i)}
+                        />
+                      );
+                    })}
+
+                    <SpineShadow />
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -265,10 +301,6 @@ export interface Book3DProps {
   /** useBookFlip 훅 결과 — 페이지가 훅을 호출하고 전달 */
   bookFlip: BookFlipResult;
 }
-
-const HIGHLIGHT_ZOOM = 1.5;
-const PAGE_W = 280;
-const PAGE_H = 390;
 
 /* 왼쪽→오른쪽→왼쪽 3번 팔랑, 반경 크게 */
 const flutterKeyframes = `
@@ -317,8 +349,9 @@ function HighlightOverlay({
     return null;
   }
 
-  const w = PAGE_W * HIGHLIGHT_ZOOM;
-  const h = PAGE_H * HIGHLIGHT_ZOOM;
+  const overlayScale = Math.min(1, (window.innerWidth * 0.92) / (PAGE_W * HIGHLIGHT_ZOOM));
+  const w = PAGE_W * HIGHLIGHT_ZOOM * overlayScale;
+  const h = PAGE_H * HIGHLIGHT_ZOOM * overlayScale;
   const animationName = highlightSide === "left" ? "paperFlutterLeft" : "paperFlutterRight";
 
   return (
@@ -356,7 +389,7 @@ function HighlightOverlay({
             opacity: mounted ? 1 : 0,
           }}
         >
-          <PageFace data={data} side={highlightSide} zoomScale={HIGHLIGHT_ZOOM} />
+          <PageFace data={data} side={highlightSide} zoomScale={HIGHLIGHT_ZOOM * overlayScale} />
         </div>
       </div>
     </>

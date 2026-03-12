@@ -157,14 +157,16 @@ export function FortuneSidebar({
   mode,
   setMode,
   theme,
+  direction = "column",
 }: {
   mode: "draw" | "browse";
   setMode: (m: "draw" | "browse") => void;
   theme: { accent: string; hintColor: string };
+  direction?: "row" | "column";
 }) {
   const { accent, hintColor } = theme;
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+    <div style={{ display: "flex", flexDirection: direction, gap: 6 }}>
       {(["draw", "browse"] as const).map(m => (
         <button
           key={m}

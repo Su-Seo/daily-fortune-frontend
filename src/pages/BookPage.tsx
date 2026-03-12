@@ -85,10 +85,19 @@ function ThemeSpeedControls({
   );
 }
 
+const BOOK_FULL_W = 600; // 560px book + 40px padding
+
 export function BookPage() {
   const [themeId, setThemeId] = useState<BookThemeId>("default");
   const [speedMultiplier, setSpeedMultiplier] = useState(3);
   const [mode, setMode] = useState<"draw" | "browse">("draw");
+  const [isMobile, setIsMobile] = useState(() => window.innerWidth < BOOK_FULL_W);
+
+  useEffect(() => {
+    const update = () => setIsMobile(window.innerWidth < BOOK_FULL_W);
+    window.addEventListener("resize", update);
+    return () => window.removeEventListener("resize", update);
+  }, []);
   const [pageInput, setPageInput] = useState("");
 
   const config = useMemo(
@@ -158,17 +167,19 @@ export function BookPage() {
       />
 
       <div style={{ position: "relative" }}>
-        <div
-          style={{
-            position: "absolute",
-            right: "100%",
-            top: "50%",
-            transform: "translateY(-50%)",
-            marginRight: 24,
-          }}
-        >
-          <FortuneSidebar mode={mode} setMode={setMode} theme={config.theme} />
-        </div>
+        {!isMobile && (
+          <div
+            style={{
+              position: "absolute",
+              right: "100%",
+              top: "50%",
+              transform: "translateY(-50%)",
+              marginRight: 24,
+            }}
+          >
+            <FortuneSidebar mode={mode} setMode={setMode} theme={config.theme} />
+          </div>
+        )}
 
         <div
           style={{
@@ -178,6 +189,11 @@ export function BookPage() {
           }}
         >
           <Book3D config={config} bookFlip={bookFlip} />
+          {isMobile && (
+            <div style={{ marginTop: 16 }}>
+              <FortuneSidebar mode={mode} setMode={setMode} theme={config.theme} direction="row" />
+            </div>
+          )}
           <div style={{ marginTop: 24 }}>{controlsContent}</div>
         </div>
       </div>
