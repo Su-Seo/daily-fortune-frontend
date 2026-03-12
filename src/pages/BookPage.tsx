@@ -12,9 +12,9 @@ import {
 import { useBookFlip } from "@/components/Book/useBookFlip";
 import { ModeToggle, createFortuneControls } from "@/pages/FortuneBookControls";
 
-const BASE_SINGLE_MS = 550;
-const BASE_MULTI_MS = 280;
-const MIN_MS = 50;
+const BASE_SINGLE_MS = 55;
+const BASE_MULTI_MS = 10;
+const MIN_MS = 1;
 const SPEED_MIN = 1;
 const SPEED_MAX = 10;
 
@@ -87,7 +87,7 @@ function ThemeSpeedControls({
 
 export function BookPage() {
   const [themeId, setThemeId] = useState<BookThemeId>("default");
-  const [speedMultiplier, setSpeedMultiplier] = useState(3);
+  const [speedMultiplier, setSpeedMultiplier] = useState(1);
   const [mode, setMode] = useState<"draw" | "browse">("draw");
   const [pageInput, setPageInput] = useState("");
 

@@ -283,7 +283,7 @@ export function useBookFlip(total: number, flipSpeed?: FlipSpeedConfig | null): 
             setIsShuffling(false);
           }
         },
-        Math.max(60, multiMs)
+        multiMs
       );
     };
 
