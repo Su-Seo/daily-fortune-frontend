@@ -10,7 +10,7 @@ import {
   bookThemeSwatchColors,
 } from "@/components/Book/book.theme";
 import { useBookFlip } from "@/components/Book/useBookFlip";
-import { ModeToggle, createFortuneControls } from "@/pages/FortuneBookControls";
+import { ModeToggle, createFortuneControls } from "@/components/FortuneBookControls";
 
 const BASE_SINGLE_MS = 55;
 const BASE_MULTI_MS = 10;
