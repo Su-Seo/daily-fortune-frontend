@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 
+import { Shuffle } from "lucide-react";
+
 import Book3D from "@/components/Book/Book3D";
 import type { BookControlProps } from "@/components/Book/Book3D";
 import { createFortuneBookConfig } from "@/components/Book/adapters";
@@ -24,17 +26,19 @@ function speedMultiplierToConfig(x: number): FlipSpeedConfig {
   return { single, multi };
 }
 
-function ThemeSpeedControls({
+function GlobalControls({
   themeId,
   onThemeChange,
   speedMultiplier,
   onSpeedMultiplierChange,
+  onShufflePages,
   theme,
 }: {
   themeId: BookThemeId;
   onThemeChange: (id: BookThemeId) => void;
   speedMultiplier: number;
   onSpeedMultiplierChange: (x: number) => void;
+  onShufflePages: () => void;
   theme: { accent: string; hintColor: string };
 }) {
   const { accent, hintColor } = theme;
@@ -61,6 +65,28 @@ function ThemeSpeedControls({
           style={{ width: 64, height: 4, accentColor: accent }}
         />
       </div>
+      <span style={{ color: hintColor, fontSize: 10 }}>|</span>
+      <button
+        type="button"
+        onClick={onShufflePages}
+        aria-label="페이지 섞기"
+        title="페이지 순서 섞기"
+        style={{
+          width: 24,
+          height: 24,
+          padding: 0,
+          border: `1px solid ${accent}66`,
+          borderRadius: "50%",
+          background: `${accent}18`,
+          color: accent,
+          cursor: "pointer",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+      >
+        <Shuffle size={12} />
+      </button>
       <span style={{ color: hintColor, fontSize: 10 }}>|</span>
       {bookThemeIds.map(id => (
         <button
@@ -90,13 +116,16 @@ export function BookPage() {
   const [speedMultiplier, setSpeedMultiplier] = useState(1);
   const [mode, setMode] = useState<"draw" | "browse">("draw");
   const [pageInput, setPageInput] = useState("");
+  const [shuffleKey, setShuffleKey] = useState(0);
 
   const config = useMemo(
     () =>
       createFortuneBookConfig(themeId, {
         flipSpeed: speedMultiplierToConfig(speedMultiplier),
+        shuffle: shuffleKey > 0,
       }),
-    [themeId, speedMultiplier]
+
+    [themeId, speedMultiplier, shuffleKey]
   );
 
   const total = config.spreads.length;
@@ -149,11 +178,15 @@ export function BookPage() {
         position: "relative",
       }}
     >
-      <ThemeSpeedControls
+      <GlobalControls
         themeId={themeId}
         onThemeChange={setThemeId}
         speedMultiplier={speedMultiplier}
         onSpeedMultiplierChange={setSpeedMultiplier}
+        onShufflePages={() => {
+          bookFlip.goToPageAnimated(0);
+          setShuffleKey(k => k + 1);
+        }}
         theme={config.theme}
       />
 
