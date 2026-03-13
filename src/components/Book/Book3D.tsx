@@ -4,7 +4,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import { toBlob, toPng } from "html-to-image";
-import { Copy, Download, Share2, X } from "lucide-react";
+import { Copy, Download, Maximize2, Share2, X } from "lucide-react";
 
 import { BookConfigProvider } from "@/components/Book/BookConfigProvider";
 import { PageFace } from "@/components/Book/PageFace";
@@ -15,6 +15,23 @@ import type { BookFlipResult } from "@/components/Book/useBookFlip";
 const HIGHLIGHT_ZOOM = 1.5;
 const PAGE_W = 280;
 const PAGE_H = 390;
+
+const highlightBtnStyle = {
+  position: "absolute" as const,
+  top: 6,
+  width: 26,
+  height: 26,
+  borderRadius: "50%",
+  border: "none",
+  background: "rgba(0,0,0,0.25)",
+  color: "rgba(255,255,255,0.7)",
+  cursor: "pointer",
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  zIndex: 10,
+  transition: "background 0.2s",
+};
 
 function LeftPanel({ flipped, config }: { flipped: number; config: BookConfig }) {
   const total = config.spreads.length;
@@ -29,7 +46,6 @@ function LeftPanel({ flipped, config }: { flipped: number; config: BookConfig })
     boxShadow: config.theme.panelShadow.left,
     zIndex: 0,
   };
-  // flipped=0: 닫힌 책(앞표지) → 왼쪽 숨김, 오른쪽에 표지
   if (flipped === 0) {
     return null;
   }
@@ -59,8 +75,6 @@ function RightPanel({
 }) {
   const { theme } = config;
   const total = config.spreads.length;
-  // flipped=total: 닫힌 책(뒤표지) → 오른쪽 숨김 (첫 표지와 반대)
-  // 마지막 페이지 플립 중: 뒤에 페이지 없음 → 오른쪽 숨김 (순간적 페이지 보임 방지)
   if (flipped === total || isFlippingLast) {
     return null;
   }
@@ -277,6 +291,42 @@ function Book3DInner({ config, bookFlip }: { config: BookConfig; bookFlip: BookF
                 </div>
               </div>
             </div>
+
+            {/* 하이라이트(확대) 버튼 — 3D container 밖, book sizing wrapper 위에 오버레이 */}
+            {!isShuffling && flip === null && (
+              <>
+                {flipped > 0 &&
+                  flipped < total &&
+                  config.spreads[flipped - 1].back?.type === "content" && (
+                    <button
+                      onClick={() => bookFlip.openHighlight("left")}
+                      style={{
+                        ...highlightBtnStyle,
+                        left: (280 - 42) * bookScale,
+                        top: 6 * bookScale,
+                        width: 26 * bookScale,
+                        height: 26 * bookScale,
+                      }}
+                    >
+                      <Maximize2 size={13 * bookScale} />
+                    </button>
+                  )}
+                {flipped < total && config.spreads[flipped].front?.type === "content" && (
+                  <button
+                    onClick={() => bookFlip.openHighlight("right")}
+                    style={{
+                      ...highlightBtnStyle,
+                      right: 6 * bookScale,
+                      top: 6 * bookScale,
+                      width: 26 * bookScale,
+                      height: 26 * bookScale,
+                    }}
+                  >
+                    <Maximize2 size={13 * bookScale} />
+                  </button>
+                )}
+              </>
+            )}
           </div>
         </div>
       </div>

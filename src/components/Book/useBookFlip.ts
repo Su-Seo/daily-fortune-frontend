@@ -37,6 +37,8 @@ export interface BookFlipResult {
   highlightSide: HighlightSide;
   /** 하이라이트 오버레이 닫기 */
   clearHighlight: () => void;
+  /** 수동으로 하이라이트 열기 */
+  openHighlight: (side: "left" | "right") => void;
   bookRef: RefObject<HTMLDivElement | null>;
   btnForward: () => void;
   btnBackward: () => void;
@@ -229,6 +231,7 @@ export function useBookFlip(total: number, flipSpeed?: FlipSpeedConfig | null): 
   );
 
   const clearHighlight = useCallback(() => setHighlightSide(null), []);
+  const openHighlight = useCallback((side: "left" | "right") => setHighlightSide(side), []);
 
   const stopShuffle = useCallback(() => {
     shuffleActiveRef.current = false;
@@ -413,6 +416,7 @@ export function useBookFlip(total: number, flipSpeed?: FlipSpeedConfig | null): 
     isShuffling,
     highlightSide,
     clearHighlight,
+    openHighlight,
     bookRef,
     btnForward,
     btnBackward,
