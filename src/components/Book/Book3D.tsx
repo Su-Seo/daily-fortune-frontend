@@ -16,22 +16,28 @@ const HIGHLIGHT_ZOOM = 1.5;
 const PAGE_W = 280;
 const PAGE_H = 390;
 
-const highlightBtnStyle = {
-  position: "absolute" as const,
-  top: 6,
-  width: 26,
-  height: 26,
-  borderRadius: "50%",
-  border: "none",
-  background: "rgba(0,0,0,0.25)",
-  color: "rgba(255,255,255,0.7)",
-  cursor: "pointer",
-  display: "flex",
-  alignItems: "center",
-  justifyContent: "center",
-  zIndex: 10,
-  transition: "background 0.2s",
-};
+/** 페이지 테마에 어울리는 확대 버튼 스타일 생성 */
+function makeHighlightBtnStyle(accent: string, scale: number) {
+  const s = scale;
+  return {
+    position: "absolute" as const,
+    top: 8 * s,
+    width: 24 * s,
+    height: 24 * s,
+    borderRadius: 4 * s,
+    border: `1px solid ${accent}44`,
+    background: `${accent}18`,
+    color: accent,
+    cursor: "pointer",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    zIndex: 10,
+    transition: "background 0.2s, border-color 0.2s",
+    fontFamily: "'Georgia', serif",
+    backdropFilter: "blur(2px)",
+  };
+}
 
 function LeftPanel({ flipped, config }: { flipped: number; config: BookConfig }) {
   const total = config.spreads.length;
@@ -301,28 +307,22 @@ function Book3DInner({ config, bookFlip }: { config: BookConfig; bookFlip: BookF
                     <button
                       onClick={() => bookFlip.openHighlight("left")}
                       style={{
-                        ...highlightBtnStyle,
+                        ...makeHighlightBtnStyle(config.theme.contentPageAccent, bookScale),
                         left: (280 - 42) * bookScale,
-                        top: 6 * bookScale,
-                        width: 26 * bookScale,
-                        height: 26 * bookScale,
                       }}
                     >
-                      <Maximize2 size={13 * bookScale} />
+                      <Maximize2 size={11 * bookScale} />
                     </button>
                   )}
                 {flipped < total && config.spreads[flipped].front?.type === "content" && (
                   <button
                     onClick={() => bookFlip.openHighlight("right")}
                     style={{
-                      ...highlightBtnStyle,
-                      right: 6 * bookScale,
-                      top: 6 * bookScale,
-                      width: 26 * bookScale,
-                      height: 26 * bookScale,
+                      ...makeHighlightBtnStyle(config.theme.contentPageAccent, bookScale),
+                      right: 8 * bookScale,
                     }}
                   >
-                    <Maximize2 size={13 * bookScale} />
+                    <Maximize2 size={11 * bookScale} />
                   </button>
                 )}
               </>
