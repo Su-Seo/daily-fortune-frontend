@@ -1,7 +1,10 @@
 // ─────────────────────────────────────────────────────────────────────────────
 // Book3D.tsx  –  메인 컴포넌트 (config 기반, 스타일 통일)
 // ─────────────────────────────────────────────────────────────────────────────
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+
+import { toBlob, toPng } from "html-to-image";
+import { Copy, Download, Share2, X } from "lucide-react";
 
 import { BookConfigProvider } from "@/components/Book/BookConfigProvider";
 import { PageFace } from "@/components/Book/PageFace";
@@ -340,56 +343,281 @@ function HighlightOverlay({
         : null;
 
   const [mounted, setMounted] = useState(false);
+  const [copied, setCopied] = useState(false);
+  const [shared, setShared] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [sharing, setSharing] = useState(false);
+  const cardRef = useRef<HTMLDivElement>(null);
+
+  const calcScale = useCallback(() => {
+    const btnArea = 52;
+    return Math.min(
+      1,
+      (window.innerWidth * 0.92) / (PAGE_W * HIGHLIGHT_ZOOM),
+      (window.innerHeight * 0.85 - btnArea) / (PAGE_H * HIGHLIGHT_ZOOM)
+    );
+  }, []);
+
+  const [overlayScale, setOverlayScale] = useState(calcScale);
+
   useEffect(() => {
     const id = requestAnimationFrame(() => setMounted(true));
     return () => cancelAnimationFrame(id);
   }, []);
 
+  useEffect(() => {
+    const onResize = () => setOverlayScale(calcScale());
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+  }, [calcScale]);
+
+  const handleCopy = useCallback(async () => {
+    if (!data || data.type !== "content") {
+      return;
+    }
+    const text = `${data.title}\n\n${data.text}`;
+    try {
+      await navigator.clipboard.writeText(text);
+    } catch {
+      // clipboard API 미지원 환경 fallback
+      const ta = document.createElement("textarea");
+      ta.value = text;
+      ta.style.position = "fixed";
+      ta.style.opacity = "0";
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand("copy");
+      document.body.removeChild(ta);
+    }
+    setCopied(true);
+    setTimeout(() => setCopied(false), 1500);
+  }, [data]);
+
+  const getCardBlob = useCallback(async () => {
+    if (!cardRef.current) {
+      return null;
+    }
+    return toBlob(cardRef.current, { pixelRatio: 2 });
+  }, []);
+
+  const handleSave = useCallback(async () => {
+    if (!cardRef.current || saving) {
+      return;
+    }
+    setSaving(true);
+    try {
+      const dataUrl = await toPng(cardRef.current, { pixelRatio: 2 });
+      const link = document.createElement("a");
+      link.download = "fortune.png";
+      link.href = dataUrl;
+      link.click();
+    } finally {
+      setSaving(false);
+    }
+  }, [saving]);
+
+  const handleShare = useCallback(async () => {
+    if (sharing) {
+      return;
+    }
+    setSharing(true);
+    try {
+      // 모바일 공유 시트 분기: blob을 먼저 생성
+      const blob = await getCardBlob();
+      if (!blob) {
+        return;
+      }
+      const file = new File([blob], "fortune.png", { type: "image/png" });
+      if (navigator.canShare?.({ files: [file] })) {
+        await navigator.share({ title: "오늘의 운세", files: [file] });
+        return;
+      }
+    } catch (err) {
+      console.error("공유 실패:", err);
+    } finally {
+      setSharing(false);
+    }
+  }, [sharing, getCardBlob]);
+
+  // 데스크톱 이미지 복사 — clipboard.write를 클릭 즉시 호출해야 user gesture 유지
+  const handleImageCopy = useCallback(() => {
+    if (sharing) {
+      return;
+    }
+    setSharing(true);
+
+    // ClipboardItem에 Promise를 넘겨 clipboard.write는 동기적으로 호출
+    const blobPromise = (async () => {
+      const blob = await getCardBlob();
+      if (!blob) {
+        throw new Error("blob 생성 실패");
+      }
+      // canvas 경유로 순수 PNG blob 생성
+      const img = new Image();
+      const url = URL.createObjectURL(blob);
+      img.src = url;
+      await new Promise<void>(r => {
+        img.onload = () => r();
+      });
+      const canvas = document.createElement("canvas");
+      canvas.width = img.width;
+      canvas.height = img.height;
+      canvas.getContext("2d")!.drawImage(img, 0, 0);
+      URL.revokeObjectURL(url);
+      return new Promise<Blob>((resolve, reject) => {
+        canvas.toBlob(b => (b ? resolve(b) : reject(new Error("toBlob failed"))), "image/png");
+      });
+    })();
+
+    navigator.clipboard
+      .write([new ClipboardItem({ "image/png": blobPromise })])
+      .then(() => {
+        setShared(true);
+        setTimeout(() => setShared(false), 1500);
+      })
+      .catch(err => {
+        console.error("이미지 복사 실패:", err);
+      })
+      .finally(() => {
+        setSharing(false);
+      });
+  }, [sharing, getCardBlob]);
+
   if (!data) {
     return null;
   }
 
-  const overlayScale = Math.min(1, (window.innerWidth * 0.92) / (PAGE_W * HIGHLIGHT_ZOOM));
   const w = PAGE_W * HIGHLIGHT_ZOOM * overlayScale;
   const h = PAGE_H * HIGHLIGHT_ZOOM * overlayScale;
   const animationName = highlightSide === "left" ? "paperFlutterLeft" : "paperFlutterRight";
+  const isContent = data.type === "content";
+
+  const actionBtnStyle = {
+    display: "flex",
+    alignItems: "center",
+    gap: 6,
+    padding: "8px 14px",
+    borderRadius: 8,
+    border: "1px solid rgba(255,255,255,0.25)",
+    background: "rgba(255,255,255,0.12)",
+    backdropFilter: "blur(8px)",
+    color: "#fff",
+    fontSize: 13,
+    cursor: "pointer",
+    transition: "background 0.2s",
+  } as const;
 
   return (
     <>
       <style>{flutterKeyframes}</style>
+      {/* 배경 클릭 시 닫기 */}
       <div
         role="button"
         tabIndex={0}
         onClick={onClose}
-        onKeyDown={e => e.key === "Enter" && onClose()}
+        onKeyDown={e => e.key === "Escape" && onClose()}
         style={{
           position: "fixed",
           inset: 0,
           zIndex: 2000,
           display: "flex",
+          flexDirection: "column",
           alignItems: "center",
           justifyContent: "center",
+          overflowY: "auto",
+          padding: "24px 0",
           background: mounted ? "rgba(0,0,0,0.5)" : "rgba(0,0,0,0)",
-          cursor: "pointer",
+          cursor: "default",
           transition: "background 0.4s ease-out",
         }}
       >
-        <div
+        {/* X 닫기 버튼 */}
+        <button
+          onClick={onClose}
           style={{
-            width: w,
-            height: h,
-            borderRadius: 8,
-            overflow: "hidden",
-            boxShadow: "0 16px 48px rgba(0,0,0,0.5)",
-            transformStyle: "preserve-3d",
-            perspective: "1200px",
-            animation: mounted
-              ? `${animationName} 0.85s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards`
-              : "none",
-            opacity: mounted ? 1 : 0,
+            position: "fixed",
+            top: 18,
+            right: 18,
+            zIndex: 2010,
+            width: 40,
+            height: 40,
+            borderRadius: "50%",
+            border: "1px solid rgba(255,255,255,0.3)",
+            background: "rgba(0,0,0,0.4)",
+            backdropFilter: "blur(8px)",
+            color: "#fff",
+            cursor: "pointer",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            transition: "background 0.2s",
           }}
         >
-          <PageFace data={data} side={highlightSide} zoomScale={HIGHLIGHT_ZOOM * overlayScale} />
+          <X size={20} />
+        </button>
+
+        {/* 카드 영역 — 클릭해도 닫히지 않음 */}
+        <div
+          onClick={e => e.stopPropagation()}
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            gap: 16,
+          }}
+        >
+          <div
+            ref={cardRef}
+            style={{
+              width: w,
+              height: h,
+              borderRadius: 8,
+              overflow: "hidden",
+              boxShadow: "0 16px 48px rgba(0,0,0,0.5)",
+              transformStyle: "preserve-3d",
+              perspective: "1200px",
+              animation: mounted
+                ? `${animationName} 0.85s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards`
+                : "none",
+              opacity: mounted ? 1 : 0,
+            }}
+          >
+            <PageFace data={data} side={highlightSide} zoomScale={HIGHLIGHT_ZOOM * overlayScale} />
+          </div>
+
+          {/* 액션 버튼들 */}
+          {isContent && mounted && (
+            <div
+              style={{
+                display: "flex",
+                gap: 10,
+                opacity: mounted ? 1 : 0,
+                transition: "opacity 0.4s ease-out 0.6s",
+              }}
+            >
+              <button onClick={handleCopy} style={actionBtnStyle}>
+                <Copy size={16} />
+                {copied ? "복사됨!" : "운세 복사"}
+              </button>
+              <button onClick={handleSave} disabled={saving} style={actionBtnStyle}>
+                <Download size={16} />
+                {saving ? "저장 중..." : "이미지 저장"}
+              </button>
+              {navigator.canShare?.({
+                files: [new File([], "t.png", { type: "image/png" })],
+              }) ? (
+                <button onClick={handleShare} disabled={sharing} style={actionBtnStyle}>
+                  <Share2 size={16} />
+                  공유
+                </button>
+              ) : (
+                <button onClick={handleImageCopy} disabled={sharing} style={actionBtnStyle}>
+                  <Copy size={16} />
+                  {shared ? "복사됨!" : "이미지 복사"}
+                </button>
+              )}
+            </div>
+          )}
         </div>
       </div>
     </>
