@@ -46,6 +46,7 @@ export const SpreadPage = memo(({ spread, spreadIndex, flipped, rotateY, zIndex 
           overflow: "hidden",
           borderRadius: rightRadius,
           background: spread.front.bg,
+          transform: "translateZ(0.5px)",
         }}
       >
         <PageFace data={spread.front} side="right" />
@@ -66,7 +67,7 @@ export const SpreadPage = memo(({ spread, spreadIndex, flipped, rotateY, zIndex 
           inset: 0,
           backfaceVisibility: "hidden",
           WebkitBackfaceVisibility: "hidden" as const,
-          transform: "rotateY(180deg)",
+          transform: "rotateY(180deg) translateZ(0.5px)",
           overflow: "hidden",
           borderRadius: leftRadius,
           background: spread.back?.bg ?? "transparent",

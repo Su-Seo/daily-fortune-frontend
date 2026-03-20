@@ -50,6 +50,8 @@ const LeftPanel = memo(({ flipped, config }: { flipped: number; config: BookConf
     overflow: "hidden" as const,
     boxShadow: config.theme.panelShadow.left,
     zIndex: 0,
+    transform: "translateZ(0)",
+    willChange: "contents" as const,
   };
   if (flipped === 0) {
     return null;
@@ -99,6 +101,8 @@ const RightPanel = memo(
           overflow: "hidden",
           boxShadow: theme.panelShadow.right,
           zIndex: 0,
+          transform: "translateZ(0)",
+          willChange: "contents" as const,
         }}
       >
         {showStack &&
@@ -220,7 +224,6 @@ function Book3DInner({ config, bookFlip }: { config: BookConfig; bookFlip: BookF
                 style={{
                   perspective: "2400px",
                   perspectiveOrigin: "50% 45%",
-                  contain: "layout style",
                 }}
               >
                 <div style={{ position: "relative" }}>
@@ -257,7 +260,6 @@ function Book3DInner({ config, bookFlip }: { config: BookConfig; bookFlip: BookF
                       transformStyle: "preserve-3d",
                       transform: "rotateX(6deg) rotateY(0deg)",
                       touchAction: "none",
-                      contain: "layout style paint",
                     }}
                     onMouseDown={onMouseDown}
                   >
@@ -273,6 +275,11 @@ function Book3DInner({ config, bookFlip }: { config: BookConfig; bookFlip: BookF
                       const isFlipping = flip?.idx === i;
 
                       if (isTurned && !isFlipping) {
+                        return null;
+                      }
+
+                      // 모바일 GPU 부담 완화: 현재 페이지 근처만 렌더링
+                      if (!isFlipping && i > flipped + 2) {
                         return null;
                       }
 
