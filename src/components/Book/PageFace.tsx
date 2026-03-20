@@ -1,7 +1,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 // PageFace.tsx  –  페이지 한 면의 콘텐츠 렌더러 (테마 적용)
 // ─────────────────────────────────────────────────────────────────────────────
-import type { CSSProperties } from "react";
+import { type CSSProperties, memo } from "react";
 
 import type { ContentData, CoverData, PageData } from "@/components/Book/book.types";
 import { useBookConfig } from "@/components/Book/bookHooks";
@@ -157,19 +157,17 @@ function ContentPage({
         overflow: "hidden",
       }}
     >
-      {Array.from({ length: 16 }).map((_, i) => (
-        <div
-          key={i}
-          style={{
-            position: "absolute",
-            left: side === "right" ? spine : outer,
-            right: side === "left" ? spine : outer,
-            top: 88 * s + i * 22 * s,
-            height: 1 * s,
-            background: lineColor,
-          }}
-        />
-      ))}
+      <div
+        style={{
+          position: "absolute",
+          left: side === "right" ? spine : outer,
+          right: side === "left" ? spine : outer,
+          top: 88 * s,
+          height: 16 * 22 * s,
+          backgroundImage: `repeating-linear-gradient(to bottom, ${lineColor} 0px, ${lineColor} ${1 * s}px, transparent ${1 * s}px, transparent ${22 * s}px)`,
+          pointerEvents: "none",
+        }}
+      />
       <div
         style={{
           fontSize: 9 * s,
@@ -268,24 +266,26 @@ function EmptyBack({ zoomScale = 1 }: { zoomScale?: number }) {
   );
 }
 
-export function PageFace({
-  data,
-  side,
-  zoomScale = 1,
-}: {
-  data: PageData | null | undefined;
-  side?: "left" | "right";
-  /** 1보다 크면 네이티브 확대 렌더링 (흐림 방지) */
-  zoomScale?: number;
-}) {
-  if (!data) {
-    return <EmptyBack zoomScale={zoomScale} />;
+export const PageFace = memo(
+  ({
+    data,
+    side,
+    zoomScale = 1,
+  }: {
+    data: PageData | null | undefined;
+    side?: "left" | "right";
+    /** 1보다 크면 네이티브 확대 렌더링 (흐림 방지) */
+    zoomScale?: number;
+  }) => {
+    if (!data) {
+      return <EmptyBack zoomScale={zoomScale} />;
+    }
+    if (data.type === "cover") {
+      return <Cover d={data} zoomScale={zoomScale} />;
+    }
+    if (data.type === "content") {
+      return <ContentPage d={data} side={side} zoomScale={zoomScale} />;
+    }
+    return null;
   }
-  if (data.type === "cover") {
-    return <Cover d={data} zoomScale={zoomScale} />;
-  }
-  if (data.type === "content") {
-    return <ContentPage d={data} side={side} zoomScale={zoomScale} />;
-  }
-  return null;
-}
+);

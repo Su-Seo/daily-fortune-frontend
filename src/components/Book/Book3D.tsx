@@ -1,7 +1,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 // Book3D.tsx  –  메인 컴포넌트 (config 기반, 스타일 통일)
 // ─────────────────────────────────────────────────────────────────────────────
-import { useCallback, useEffect, useRef, useState } from "react";
+import { memo, useCallback, useEffect, useRef, useState } from "react";
 
 import { toBlob, toPng } from "html-to-image";
 import { Copy, Download, Maximize2, Share2, X } from "lucide-react";
@@ -35,11 +35,10 @@ function makeHighlightBtnStyle(accent: string, scale: number) {
     zIndex: 10,
     transition: "background 0.2s, border-color 0.2s",
     fontFamily: "'Georgia', serif",
-    backdropFilter: "blur(2px)",
   };
 }
 
-function LeftPanel({ flipped, config }: { flipped: number; config: BookConfig }) {
+const LeftPanel = memo(({ flipped, config }: { flipped: number; config: BookConfig }) => {
   const total = config.spreads.length;
   const baseStyle = {
     position: "absolute" as const,
@@ -68,58 +67,60 @@ function LeftPanel({ flipped, config }: { flipped: number; config: BookConfig })
       <PageFace data={config.spreads[flipped - 1].back ?? null} side="left" />
     </div>
   );
-}
+});
 
-function RightPanel({
-  flipped,
-  config,
-  isFlippingLast,
-}: {
-  flipped: number;
-  config: BookConfig;
-  isFlippingLast: boolean;
-}) {
-  const { theme } = config;
-  const total = config.spreads.length;
-  if (flipped === total || isFlippingLast) {
-    return null;
+const RightPanel = memo(
+  ({
+    flipped,
+    config,
+    isFlippingLast,
+  }: {
+    flipped: number;
+    config: BookConfig;
+    isFlippingLast: boolean;
+  }) => {
+    const { theme } = config;
+    const total = config.spreads.length;
+    if (flipped === total || isFlippingLast) {
+      return null;
+    }
+    const data = config.spreads[flipped].front;
+    const showStack = flipped > 0;
+
+    return (
+      <div
+        style={{
+          position: "absolute",
+          left: "50%",
+          top: 0,
+          width: "50%",
+          height: "100%",
+          borderRadius: "2px 4px 4px 2px",
+          overflow: "hidden",
+          boxShadow: theme.panelShadow.right,
+          zIndex: 0,
+        }}
+      >
+        {showStack &&
+          [3, 2, 1].map(n => (
+            <div
+              key={n}
+              style={{
+                position: "absolute",
+                top: n,
+                right: -n * 1.5,
+                bottom: n,
+                left: 2,
+                background: `rgba(${theme.stackBgRgb},${0.55 - n * 0.12})`,
+                borderRadius: "0 4px 4px 0",
+              }}
+            />
+          ))}
+        <PageFace data={data} side="right" />
+      </div>
+    );
   }
-  const data = config.spreads[flipped].front;
-  const showStack = flipped > 0;
-
-  return (
-    <div
-      style={{
-        position: "absolute",
-        left: "50%",
-        top: 0,
-        width: "50%",
-        height: "100%",
-        borderRadius: "2px 4px 4px 2px",
-        overflow: "hidden",
-        boxShadow: theme.panelShadow.right,
-        zIndex: 0,
-      }}
-    >
-      {showStack &&
-        [3, 2, 1].map(n => (
-          <div
-            key={n}
-            style={{
-              position: "absolute",
-              top: n,
-              right: -n * 1.5,
-              bottom: n,
-              left: 2,
-              background: `rgba(${theme.stackBgRgb},${0.55 - n * 0.12})`,
-              borderRadius: "0 4px 4px 0",
-            }}
-          />
-        ))}
-      <PageFace data={data} side="right" />
-    </div>
-  );
-}
+);
 
 function SpineShadow() {
   return (
@@ -141,17 +142,7 @@ function SpineShadow() {
 
 function Book3DInner({ config, bookFlip }: { config: BookConfig; bookFlip: BookFlipResult }) {
   const total = config.spreads.length;
-  const {
-    flipped,
-    flip,
-    isShuffling,
-    bookRef,
-    onMouseDown,
-    onTouchStart,
-    onTouchMove,
-    onTouchEnd,
-    stopShuffle,
-  } = bookFlip;
+  const { flipped, flip, isShuffling, bookRef, onMouseDown, stopShuffle } = bookFlip;
 
   const { theme } = config;
 
@@ -225,7 +216,13 @@ function Book3DInner({ config, bookFlip }: { config: BookConfig; bookFlip: BookF
                 transform: `scale(${bookScale})`,
               }}
             >
-              <div style={{ perspective: "2400px", perspectiveOrigin: "50% 45%" }}>
+              <div
+                style={{
+                  perspective: "2400px",
+                  perspectiveOrigin: "50% 45%",
+                  contain: "layout style",
+                }}
+              >
                 <div style={{ position: "relative" }}>
                   {isShuffling && (
                     <div
@@ -259,11 +256,10 @@ function Book3DInner({ config, bookFlip }: { config: BookConfig; bookFlip: BookF
                       position: "relative",
                       transformStyle: "preserve-3d",
                       transform: "rotateX(6deg) rotateY(0deg)",
+                      touchAction: "none",
+                      contain: "layout style paint",
                     }}
                     onMouseDown={onMouseDown}
-                    onTouchStart={onTouchStart}
-                    onTouchMove={onTouchMove}
-                    onTouchEnd={onTouchEnd}
                   >
                     <LeftPanel flipped={flipped} config={config} />
                     <RightPanel
@@ -355,19 +351,15 @@ export interface Book3DProps {
   bookFlip: BookFlipResult;
 }
 
-/* 왼쪽→오른쪽→왼쪽 3번 팔랑, 반경 크게 */
+/* 경량화된 팔랑 애니메이션 — translate + scale만 사용하여 모바일 GPU 부담 최소화 */
 const flutterKeyframes = `
   @keyframes paperFlutterLeft {
-    0% { transform: translate(-180px, 45px) scale(0.5) rotateZ(-16deg) rotateX(6deg); opacity: 0.7; }
-    33% { transform: translate(-100px, 10px) scale(0.72) rotateZ(14deg) rotateX(3deg); opacity: 0.88; }
-    66% { transform: translate(-35px, -3px) scale(0.9) rotateZ(-12deg) rotateX(1deg); opacity: 0.97; }
-    100% { transform: translate(0, 0) scale(1) rotateZ(0deg) rotateX(0deg); opacity: 1; }
+    0% { transform: translate(-80px, 30px) scale(0.7); opacity: 0; }
+    100% { transform: translate(0, 0) scale(1); opacity: 1; }
   }
   @keyframes paperFlutterRight {
-    0% { transform: translate(180px, 45px) scale(0.5) rotateZ(16deg) rotateX(6deg); opacity: 0.7; }
-    33% { transform: translate(100px, 10px) scale(0.72) rotateZ(-14deg) rotateX(3deg); opacity: 0.88; }
-    66% { transform: translate(35px, -3px) scale(0.9) rotateZ(12deg) rotateX(1deg); opacity: 0.97; }
-    100% { transform: translate(0, 0) scale(1) rotateZ(0deg) rotateX(0deg); opacity: 1; }
+    0% { transform: translate(80px, 30px) scale(0.7); opacity: 0; }
+    100% { transform: translate(0, 0) scale(1); opacity: 1; }
   }
 `;
 
@@ -549,8 +541,7 @@ function HighlightOverlay({
     padding: "8px 14px",
     borderRadius: 8,
     border: "1px solid rgba(255,255,255,0.25)",
-    background: "rgba(255,255,255,0.12)",
-    backdropFilter: "blur(8px)",
+    background: "rgba(255,255,255,0.15)",
     color: "#fff",
     fontSize: 13,
     cursor: "pointer",
@@ -593,8 +584,7 @@ function HighlightOverlay({
             height: 40,
             borderRadius: "50%",
             border: "1px solid rgba(255,255,255,0.3)",
-            background: "rgba(0,0,0,0.4)",
-            backdropFilter: "blur(8px)",
+            background: "rgba(0,0,0,0.6)",
             color: "#fff",
             cursor: "pointer",
             display: "flex",
@@ -624,10 +614,8 @@ function HighlightOverlay({
               borderRadius: 8,
               overflow: "hidden",
               boxShadow: "0 16px 48px rgba(0,0,0,0.5)",
-              transformStyle: "preserve-3d",
-              perspective: "1200px",
               animation: mounted
-                ? `${animationName} 0.85s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards`
+                ? `${animationName} 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards`
                 : "none",
               opacity: mounted ? 1 : 0,
             }}

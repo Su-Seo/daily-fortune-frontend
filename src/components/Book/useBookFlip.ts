@@ -1,15 +1,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 // useBookFlip.ts  –  페이지 뒤집기 상태 · 드래그 · RAF 애니메이션 훅
 // ─────────────────────────────────────────────────────────────────────────────
-import {
-  type MouseEvent,
-  type RefObject,
-  type TouchEvent,
-  useCallback,
-  useEffect,
-  useRef,
-  useState,
-} from "react";
+import { type MouseEvent, type RefObject, useCallback, useEffect, useRef, useState } from "react";
 
 import type { FlipSpeedConfig } from "@/components/Book/book.config";
 import type { FlipState } from "@/components/Book/book.types";
@@ -51,9 +43,6 @@ export interface BookFlipResult {
   /** 셔플 즉시 정지 */
   stopShuffle: () => void;
   onMouseDown: (e: MouseEvent<HTMLDivElement>) => void;
-  onTouchStart: (e: TouchEvent<HTMLDivElement>) => void;
-  onTouchMove: (e: TouchEvent<HTMLDivElement>) => void;
-  onTouchEnd: () => void;
 }
 
 const DEFAULT_SINGLE_MS = 660;
@@ -376,8 +365,8 @@ export function useBookFlip(total: number, flipSpeed?: FlipSpeedConfig | null): 
   const onMouseMove = useCallback((e: globalThis.MouseEvent) => moveDrag(e.clientX), [moveDrag]);
   const onMouseUp = useCallback(() => endDrag(), [endDrag]);
 
-  const onTouchStart = useCallback(
-    (e: TouchEvent<HTMLDivElement>) => {
+  const onTouchStartNative = useCallback(
+    (e: globalThis.TouchEvent) => {
       if (shuffleActiveRef.current) {
         stopShuffle();
       } else {
@@ -386,14 +375,30 @@ export function useBookFlip(total: number, flipSpeed?: FlipSpeedConfig | null): 
     },
     [startDrag, stopShuffle]
   );
-  const onTouchMove = useCallback(
-    (e: TouchEvent<HTMLDivElement>) => {
+  const onTouchMoveNative = useCallback(
+    (e: globalThis.TouchEvent) => {
       e.preventDefault();
       moveDrag(e.touches[0].clientX);
     },
     [moveDrag]
   );
-  const onTouchEnd = useCallback(() => endDrag(), [endDrag]);
+  const onTouchEndNative = useCallback(() => endDrag(), [endDrag]);
+
+  // 터치 이벤트를 { passive: false }로 직접 등록 — React의 passive 기본값 문제 해결
+  useEffect(() => {
+    const el = bookRef.current;
+    if (!el) {
+      return;
+    }
+    el.addEventListener("touchstart", onTouchStartNative, { passive: false });
+    el.addEventListener("touchmove", onTouchMoveNative, { passive: false });
+    el.addEventListener("touchend", onTouchEndNative);
+    return () => {
+      el.removeEventListener("touchstart", onTouchStartNative);
+      el.removeEventListener("touchmove", onTouchMoveNative);
+      el.removeEventListener("touchend", onTouchEndNative);
+    };
+  }, [onTouchStartNative, onTouchMoveNative, onTouchEndNative]);
 
   useEffect(() => {
     window.addEventListener("mousemove", onMouseMove);
@@ -425,8 +430,5 @@ export function useBookFlip(total: number, flipSpeed?: FlipSpeedConfig | null): 
     startShuffle,
     stopShuffle,
     onMouseDown,
-    onTouchStart,
-    onTouchMove,
-    onTouchEnd,
   };
 }
