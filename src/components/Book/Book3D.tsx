@@ -358,15 +358,18 @@ export interface Book3DProps {
   bookFlip: BookFlipResult;
 }
 
-/* 경량화된 팔랑 애니메이션 — translate + scale만 사용하여 모바일 GPU 부담 최소화 */
 const flutterKeyframes = `
   @keyframes paperFlutterLeft {
-    0% { transform: translate(-80px, 30px) scale(0.7); opacity: 0; }
-    100% { transform: translate(0, 0) scale(1); opacity: 1; }
+    0% { transform: translate(-180px, 45px) scale(0.5) rotateZ(-16deg) rotateX(6deg); opacity: 0.7; }
+    33% { transform: translate(-100px, 10px) scale(0.72) rotateZ(14deg) rotateX(3deg); opacity: 0.88; }
+    66% { transform: translate(-35px, -3px) scale(0.9) rotateZ(-12deg) rotateX(1deg); opacity: 0.97; }
+    100% { transform: translate(0, 0) scale(1) rotateZ(0deg) rotateX(0deg); opacity: 1; }
   }
   @keyframes paperFlutterRight {
-    0% { transform: translate(80px, 30px) scale(0.7); opacity: 0; }
-    100% { transform: translate(0, 0) scale(1); opacity: 1; }
+    0% { transform: translate(180px, 45px) scale(0.5) rotateZ(16deg) rotateX(6deg); opacity: 0.7; }
+    33% { transform: translate(100px, 10px) scale(0.72) rotateZ(-14deg) rotateX(3deg); opacity: 0.88; }
+    66% { transform: translate(35px, -3px) scale(0.9) rotateZ(12deg) rotateX(1deg); opacity: 0.97; }
+    100% { transform: translate(0, 0) scale(1) rotateZ(0deg) rotateX(0deg); opacity: 1; }
   }
 `;
 
@@ -621,8 +624,10 @@ function HighlightOverlay({
               borderRadius: 8,
               overflow: "hidden",
               boxShadow: "0 16px 48px rgba(0,0,0,0.5)",
+              transformStyle: "preserve-3d",
+              perspective: "1200px",
               animation: mounted
-                ? `${animationName} 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards`
+                ? `${animationName} 0.85s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards`
                 : "none",
               opacity: mounted ? 1 : 0,
             }}
